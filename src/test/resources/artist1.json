@@ -1,0 +1,25 @@
+{
+    "artist": {
+        "albumSize": 44,
+        "alias": [
+            "Jay Chou",
+            "周董"
+        ],
+        "briefDesc": "",
+        "followed": false,
+        "id": 6452,
+        "img1v1Id": "109951169164936940",
+        "img1v1Id_str": "109951169164936940",
+        "img1v1Url": "https://p2.music.126.net/_ECPuM0s0qtWhkpQOSTZUg==/109951169164936940.jpg",
+        "musicSize": 568,
+        "name": "周杰伦",
+        "picId": "109951169164936450",
+        "picId_str": "109951169164936450",
+        "picUrl": "https://p2.music.126.net/NWv6PtSBkyWZzqbJVzBr7g==/109951169164936450.jpg",
+        "topicPerson": 0,
+        "trans": ""
+    },
+    "code": 200,
+    "hotAlbums": [],
+    "more": true
+}

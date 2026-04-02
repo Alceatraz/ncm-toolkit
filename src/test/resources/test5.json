@@ -1,0 +1,21 @@
+{
+    "musicId": "3201467",
+    "musicName": "Sternblumennacht",
+    "artist": [
+        ["Nenia C'Alladhan", "70138"],
+        ["Sopor Aeternus & the Ensemble of Shadows", "99996"]
+    ],
+    "albumId": "323973",
+    "album": "Nenia C'Alladhan",
+    "albumPicDocId": "826832744132293",
+    "albumPic": "http://p3.music.126.net/7EU32vARjyI7lNlXuRmspw==/826832744132293.jpg",
+    "bitrate": 320000,
+    "mp3DocId": "afa08ac7b6389ad0c0ee177c5c717111",
+    "duration": 666000,
+    "mvId": "",
+    "alias": [],
+    "transNames": ["紫星花之夜"],
+    "format": "mp3",
+    "fee": 0,
+    "volumeDelta": -8.5661
+}

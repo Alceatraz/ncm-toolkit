@@ -1,0 +1,23 @@
+{
+    "musicId": "20506035",
+    "musicName": "Dream On",
+    "artist": [
+        ["Aerosmith", "85504"]
+    ],
+    "albumId": "1909393",
+    "album": "Aerosmith",
+    "albumPicDocId": "109951168316886883",
+    "albumPic": "http://p3.music.126.net/zHfJ-QVu7PpdKWxH8pta5g==/109951168316886883.jpg",
+    "bitrate": 999000,
+    "mp3DocId": "7b6a2bfb64db65aa4bdda455b97dc386",
+    "duration": 267596,
+    "mvId": "14330144",
+    "alias": ["ゲーム「DEAD OR ALIVE ULTIMATE~デッド・オア・アライブ ULTIMATE~」OPテーマ"],
+    "transNames": [],
+    "format": "flac",
+    "fee": 8,
+    "volumeDelta": -7.15,
+    "privilege": {
+        "flag": 1540356
+    }
+}

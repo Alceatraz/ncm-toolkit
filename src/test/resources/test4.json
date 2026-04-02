@@ -1,0 +1,25 @@
+{
+    "musicId": "1946679739",
+    "musicName": "Twin Lights",
+    "artist": [
+        ["Two Steps From Hell", "102714"],
+        ["Thomas Bergersen", "45336"],
+        ["Uyanga Bold", "14902539"]
+    ],
+    "albumId": "144842435",
+    "album": "Myth",
+    "albumPicDocId": "109951170131834302",
+    "albumPic": "http://p4.music.126.net/4wqY8tLrRfaywSvyK2MIXA==/109951170131834302.jpg",
+    "bitrate": 999000,
+    "mp3DocId": "5e11713bdf00ce7505cb20fab0f9d0de",
+    "duration": 268049,
+    "mvId": "",
+    "alias": [],
+    "transNames": [],
+    "format": "flac",
+    "fee": 8,
+    "volumeDelta": -10.5085,
+    "privilege": {
+        "flag": 1540100
+    }
+}

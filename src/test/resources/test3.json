@@ -1,0 +1,23 @@
+{
+    "musicId": "540582961",
+    "musicName": "Walls",
+    "artist": [
+        ["Bon Jovi", "88147"]
+    ],
+    "albumId": "37728571",
+    "album": "This House Is Not For Sale",
+    "albumPicDocId": "109951170150695718",
+    "albumPic": "http://p3.music.126.net/T46sNlVkNttSPwObMH4vfg==/109951170150695718.jpg",
+    "bitrate": 999000,
+    "mp3DocId": "43cc183535aa34265489eafbcf7f5fa5",
+    "duration": 217893,
+    "mvId": "5879036",
+    "alias": [],
+    "transNames": [],
+    "format": "flac",
+    "fee": 8,
+    "volumeDelta": -11.1507,
+    "privilege": {
+        "flag": 1278212
+    }
+}

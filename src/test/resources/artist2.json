@@ -1,0 +1,23 @@
+{
+    "artist": {
+        "albumSize": 111,
+        "alias": [],
+        "briefDesc": "",
+        "followed": false,
+        "id": 102714,
+        "img1v1Id": "6027522744141514",
+        "img1v1Url": "https://p1.music.126.net/nG3AaqQN4fMQ-Xwhf19Trg==/6027522744141514.jpg",
+        "musicSize": 3253,
+        "name": "Two Steps From Hell",
+        "picId": "5995636906682159",
+        "picUrl": "https://p1.music.126.net/YgOdujDz7YOI4iqZJewcvg==/5995636906682159.jpg",
+        "topicPerson": 0,
+        "trans": "地狱咫尺",
+        "transNames": [
+            "地狱咫尺"
+        ]
+    },
+    "code": 200,
+    "hotAlbums": [],
+    "more": true
+}
