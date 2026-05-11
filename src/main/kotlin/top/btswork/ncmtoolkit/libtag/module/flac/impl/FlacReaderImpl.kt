@@ -24,7 +24,8 @@ import top.btswork.ncmtoolkit.tool.reverseBytes
 import java.nio.charset.StandardCharsets
 
 const val enableVendorTrim = false
-const val enableThrowWhenFalseSync = true
+const val enableThrowWhenFalseSync = false
+const val enableStrictSamples = false
 
 class FlacReaderImpl : FlacReader {
 
@@ -226,6 +227,16 @@ class FlacReaderImpl : FlacReader {
 
       if (success) {
         end = current()
+
+        val frameContentLen = end - position - 2
+        val frameContent = get(frameContentLen, position)
+        val storedCrc16 = getInteger16(end - 2).toInt() and 0xFFFF
+        val computedCrc16 = frameContent.crc16()
+        if (computedCrc16 != storedCrc16) {
+          System.err.println("CRC-16 fail at frame $position: computed=${"%04x".format(computedCrc16)} stored=${"%04x".format(storedCrc16)} (mid-file frame likely bit-flipped)")
+          // 不 break、不 throw，audio 继续解；tagger 不该因为坏帧拒绝处理
+        }
+
         accumulatedSamples += frameInfo.samples().toLong()
         if (DEBUG) println("FRAME - SYNC $position ~ $end skip=${end - position} true samples=$accumulatedSamples/$totalSamples")
       } else {
@@ -236,6 +247,7 @@ class FlacReaderImpl : FlacReader {
     }
 
     if (begin < 0 || end < 0) error("No frame found")
+    if (enableStrictSamples && accumulatedSamples != totalSamples) error("samples count mismatch $accumulatedSamples / $totalSamples")
 
     if (DEBUG) System.err.println("$begin -> $end")
 
@@ -599,7 +611,8 @@ class FlacReaderImpl : FlacReader {
   private fun ByteArray.crc8(): Int {
     var crc = 0
     forEach {
-      crc = crc xor (it.toInt() and 0xFF)
+      val toInt = it.toInt() and 0xFF
+      crc = crc xor toInt
       repeat(8) {
         crc = if (crc and 0x80 != 0) {
           (crc shl 1) xor 0x07
@@ -607,6 +620,25 @@ class FlacReaderImpl : FlacReader {
           crc shl 1
         }
         crc = crc and 0xff
+      }
+    }
+    return crc
+  }
+
+  private fun ByteArray.crc16(): Int {
+    var crc = 0
+    forEach {
+      val toInt = it.toInt() and 0xFF
+      val shl8 = toInt shl 8
+      crc = crc xor shl8
+      crc = crc and 0xFFFF
+      repeat(8) {
+        crc = if (crc and 0x8000 != 0) {
+          ((crc shl 1) xor 0x8005)
+        } else {
+          (crc shl 1)
+        }
+        crc = crc and 0xFFFF
       }
     }
     return crc
