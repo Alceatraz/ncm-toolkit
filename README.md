@@ -47,18 +47,20 @@ https://music.163.com/api/artist/albums/102714?limit=0
 
 ```
 
-picID = 5639395138885805 默认背景
-img1v1Id = 18686200114669622 默认头像
+无效 默认背景 picID = 5639395138885805
+无效 默认头像 img1v1Id = 18686200114669622
 
 ### 本地信息
 
 - TrackID
 - TrackName
-- TrackTrans
+- TrackTrans[]
 - CoverID
 - CoverURL
 - AlbumID
 - AlbumName
+- ArtistID[]
+- ArtistName[]
 
 ### 歌词信息 TrackID
 
@@ -68,22 +70,23 @@ img1v1Id = 18686200114669622 默认头像
 
 ### 专辑信息 AlbumID
 
+> 无效 album.songs[].album.artist
+> 有效 album.songs[].album.artists.id
+> 有效 album.songs[].album.artists.name
+> 有效 songs.album.artist{}
+> 有效 album.artists.id
+> 有效 album.artists.name
+
 - AlbumName
 - AlbumCoverID
 - AlbumCoverURL
 - AlbumPublishEpoch
 - AlbumSize
 
-> 无效 album.songs[].album.artist
-> 有效 album.songs[].album.artists.id
-> 有效 album.songs[].album.artists.name
-
 - TrackID
 - TrackNo
 - TrackName
-- TrackDisk
-
-> 有效 songs.album.artist{}
+- TrackDisc
 
 - ArtistID
 - ArtistName
@@ -93,9 +96,6 @@ img1v1Id = 18686200114669622 默认头像
 - ArtistAvatarURL
 - ArtistBackgroundID
 - ArtistBackgroundURL
-
-> 有效 album.artists.id
-> 有效 album.artists.name
 
 TODO 目前未发现专辑多作者
 

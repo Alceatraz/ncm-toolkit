@@ -1,6 +1,10 @@
-package top.btswork.ncmtoolkit.libtag.module.flac.schema
+package top.btswork.ncmtoolkit.libtag.module.flac.schema.block
+
+import top.btswork.ncmtoolkit.tool.io.stream.Reader
+import top.btswork.ncmtoolkit.tool.io.stream.Writer
 
 object VorbisCommentBlocks {
+
   fun getInstance(
     vendor: String,
     store: List<Pair<String, String>>,
@@ -8,6 +12,15 @@ object VorbisCommentBlocks {
     vendor,
     store
   )
+
+  fun Reader.parse(): VorbisCommentBlock {
+    TODO()
+  }
+
+  fun Writer.write(block: VorbisCommentBlock) {
+
+  }
+
 }
 
 /**

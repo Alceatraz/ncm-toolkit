@@ -2,18 +2,19 @@ package top.btswork.ncmtoolkit.app.mode
 
 import top.btswork.ncmtoolkit.ApplicationContext
 import top.btswork.ncmtoolkit.app.AppMode
-import top.btswork.ncmtoolkit.tool.io.fs.Recursive
-import top.btswork.ncmtoolkit.tool.ifNot
 import top.btswork.ncmtoolkit.libengine.TaskBinding
 import top.btswork.ncmtoolkit.libengine.TaskEngines
 import top.btswork.ncmtoolkit.libengine.TaskScope
 import top.btswork.ncmtoolkit.libengine.TaskUnit
 import top.btswork.ncmtoolkit.libncm.LibNcm
-import top.btswork.ncmtoolkit.libncm.core.MetadataRaw
-import top.btswork.ncmtoolkit.libncm.core.NcmContext
-import top.btswork.ncmtoolkit.libncm.core.NcmMetadataParser
-import top.btswork.ncmtoolkit.libncm.core.NcmParser
-import top.btswork.ncmtoolkit.libncm.schema.NcmMetadata
+import top.btswork.ncmtoolkit.libncm.ncm.core.MetadataRaw
+import top.btswork.ncmtoolkit.libncm.ncm.core.NcmParser
+import top.btswork.ncmtoolkit.libncm.ncm.schema.NcmMetadata
+import top.btswork.ncmtoolkit.libncm.ncm.schema.toMetadata
+import top.btswork.ncmtoolkit.tool.ifNot
+import top.btswork.ncmtoolkit.tool.io.fs.Recursive
+import top.btswork.ncmtoolkit.tool.io.stream.Reader
+import top.btswork.ncmtoolkit.tool.io.stream.Readers
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
@@ -32,10 +33,6 @@ object AppModeJson : AppMode {
 
       withContext("NCM_PARSER") {
         LibNcm.getInstance()
-      }
-
-      withContext("NCM_META_PARSER") {
-        LibNcm.getMetadataParser()
       }
 
       withInitial("NCM_CONTEXT")
@@ -63,7 +60,6 @@ object AppModeJson : AppMode {
       withBinding(NcmCheckMagic.binding)
       withBinding(NcmParseContentKey.binding)
       withBinding(NcmParseMetadata.binding)
-      withBinding(NcmConvertMetadata.binding)
       withBinding(NcmParsePicture.binding)
 
     }.build()
@@ -83,7 +79,7 @@ object AppModeJson : AppMode {
         channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
       }
 
-      builder["NCM_CONTEXT"] = LibNcm.getByteBufferContext(buffer)
+      builder["NCM_CONTEXT"] = Readers.getInstance(buffer)
 
       val result = taskEngine.execute(builder)
 
@@ -187,8 +183,10 @@ object NcmCheckMagic : TaskUnit {
 
   override fun TaskScope.execute() {
     val ncmParser: NcmParser = scope["NCM_PARSER"]
-    val ncmContext: NcmContext = scope["NCM_CONTEXT"]
-    val checkMagic = ncmParser.checkMagic(ncmContext)
+    val ncmContext: Reader = scope["NCM_CONTEXT"]
+    val checkMagic = with(ncmParser) {
+      ncmContext.checkMagic()
+    }
     scope["NCM_CHECK_MAGIC"] = checkMagic
     if (checkMagic.not()) throw NotNcmException()
   }
@@ -213,8 +211,10 @@ object NcmParseContentKey : TaskUnit {
 
   override fun TaskScope.execute() {
     val ncmParser: NcmParser = scope["NCM_PARSER"]
-    val ncmContext: NcmContext = scope["NCM_CONTEXT"]
-    scope["NCM_CONTENT_KEY"] = ncmParser.parseContentKey(ncmContext)
+    val ncmContext: Reader = scope["NCM_CONTEXT"]
+    scope["NCM_CONTENT_KEY"] = with(ncmParser) {
+      ncmContext.parseContentKey()
+    }
   }
 
 }
@@ -229,34 +229,16 @@ object NcmParseMetadata : TaskUnit {
       "NCM_CONTENT_KEY"
     )
     produces = setOf(
-      "NCM_METADATA_RAW"
-    )
-  }
-
-  override fun TaskScope.execute() {
-    val ncmParser: NcmParser = scope["NCM_PARSER"]
-    val ncmContext: NcmContext = scope["NCM_CONTEXT"]
-    scope["NCM_METADATA_RAW"] = ncmParser.parseMetadata(ncmContext)
-  }
-}
-
-object NcmConvertMetadata : TaskUnit {
-
-  val binding = TaskBinding("ncm-convert-metadata") {
-    task = NcmConvertMetadata
-    requires = setOf(
-      "NCM_META_PARSER",
-      "NCM_METADATA_RAW",
-    )
-    produces = setOf(
       "NCM_METADATA"
     )
   }
 
   override fun TaskScope.execute() {
-    val ncmMetadata: MetadataRaw = scope["NCM_METADATA_RAW"]
-    val ncmMetadataParser: NcmMetadataParser = scope["NCM_META_PARSER"]
-    scope["NCM_METADATA"] = ncmMetadataParser.parse(ncmMetadata)
+    val ncmParser: NcmParser = scope["NCM_PARSER"]
+    val ncmContext: Reader = scope["NCM_CONTEXT"]
+    scope["NCM_METADATA"] = with(ncmParser) {
+      ncmContext.parseMetadata().toMetadata()
+    }
   }
 }
 
@@ -267,7 +249,7 @@ object NcmParsePicture : TaskUnit {
     requires = setOf(
       "NCM_PARSER",
       "NCM_CONTEXT",
-      "NCM_METADATA_RAW"
+      "NCM_METADATA"
     )
     produces = setOf(
       "PICTURE_LOCAL"
@@ -276,8 +258,10 @@ object NcmParsePicture : TaskUnit {
 
   override fun TaskScope.execute() {
     val ncmParser: NcmParser = scope["NCM_PARSER"]
-    val ncmContext: NcmContext = scope["NCM_CONTEXT"]
-    scope["PICTURE_LOCAL"] = ncmParser.parsePicture(ncmContext)
+    val ncmContext: Reader = scope["NCM_CONTEXT"]
+    scope["PICTURE_LOCAL"] = with(ncmParser) {
+      ncmContext.parsePicture()
+    }
   }
 
 }

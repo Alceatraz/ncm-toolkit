@@ -1,14 +1,12 @@
-@file:Suppress("unused")
-
 package top.btswork.ncmtoolkit.libncm
 
-import top.btswork.ncmtoolkit.libncm.core.ContentRaw
-import top.btswork.ncmtoolkit.libncm.core.NcmContext
-import top.btswork.ncmtoolkit.libncm.core.NcmProcessorFactory
-import top.btswork.ncmtoolkit.libncm.core.PictureRaw
-import top.btswork.ncmtoolkit.libncm.impl.NcmProcessorFactoryImpl
-import top.btswork.ncmtoolkit.libncm.schema.NcmMetadata
-import java.nio.ByteBuffer
+import top.btswork.ncmtoolkit.libncm.ncm.core.ContentRaw
+import top.btswork.ncmtoolkit.libncm.ncm.core.NcmProcessorFactory
+import top.btswork.ncmtoolkit.libncm.ncm.core.PictureRaw
+import top.btswork.ncmtoolkit.libncm.ncm.impl.NcmProcessorFactoryImpl
+import top.btswork.ncmtoolkit.libncm.ncm.schema.NcmMetadata
+import top.btswork.ncmtoolkit.libncm.ncm.schema.toMetadata
+import top.btswork.ncmtoolkit.tool.io.stream.Reader
 
 object LibNcm {
 
@@ -31,20 +29,18 @@ object LibNcm {
   fun setFactory(factory: NcmProcessorFactory) = also { this.factory = factory }
 
   fun getInstance() = factory.getParser()
-  fun getMetadataParser() = factory.getMetadataParser()
-  fun getByteBufferContext(buffer: ByteBuffer): NcmContext = factory.getByteBufferContext(buffer)
 
-  fun parse(byteBuffer: ByteBuffer): Triple<NcmMetadata, PictureRaw, ContentRaw> {
-    val parser = factory.getParser()
-    val context = factory.getByteBufferContext(byteBuffer)
-    require(parser.checkMagic(context))
-    val key = parser.parseContentKey(context)
-    val parseMetadata = parser.parseMetadata(context)
-    val picture = parser.parsePicture(context)
-    val content = parser.parseContent(context, key)
-    val metadata = factory.getMetadataParser().parse(parseMetadata)
-    return Triple(metadata, picture, content)
+  fun parse(reader: Reader): Triple<NcmMetadata, PictureRaw, ContentRaw> = with(factory.getParser()) {
+    require(reader.checkMagic())
+    val key = reader.parseContentKey()
+    val metadata = reader.parseMetadata().toMetadata()
+    val picture = reader.parsePicture()
+    val content = reader.parseContent(key)
+    Triple(metadata, picture, content)
   }
 
-}
+  //= ==========================================================================
 
+
+
+}

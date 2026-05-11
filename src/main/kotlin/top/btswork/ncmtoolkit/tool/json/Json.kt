@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package top.btswork.ncmtoolkit.tool.json
 
 import java.math.BigDecimal
@@ -5,7 +7,7 @@ import java.math.BigInteger
 
 object Json {
 
-  fun parse(text: String): Reader = Parser(text).parse().let { Reader(it) }
+  fun parse(text: String): JsonReader = JsonParser(text).parse().let { JsonReader(it) }
 
   sealed class JsonElement {
 
@@ -22,20 +24,18 @@ object Json {
     data class Bool(val value: Boolean) : JsonElement()
 
     object Null : JsonElement()
-  }
 
-  fun JsonElement.stringify(): String = when (this) {
-    is JsonElement.Obj -> value.entries.joinToString(prefix = "{", postfix = "}") { """"${it.key}":${it.value.stringify()}""" }
-    is JsonElement.Arr -> value.joinToString(prefix = "[", postfix = "]") { it.stringify() }
-    is JsonElement.Str -> """"${escapeString(value)}""""
-    is JsonElement.Num.Integer -> value.toString()
-    is JsonElement.Num.Decimal -> value.toPlainString()
-    is JsonElement.Bool -> if (value) "true" else "false"
-    JsonElement.Null -> "null"
-  }
+    fun stringify(): String = when (this) {
+      is Obj -> value.entries.joinToString(prefix = "{", postfix = "}") { """"${it.key}":${it.value.stringify()}""" }
+      is Arr -> value.joinToString(prefix = "[", postfix = "]") { it.stringify() }
+      is Str -> """"${escapeString(value)}""""
+      is Num.Integer -> value.toString()
+      is Num.Decimal -> value.toPlainString()
+      is Bool -> if (value) "true" else "false"
+      Null -> "null"
+    }
 
-  private fun escapeString(s: String): String =
-    buildString {
+    private fun escapeString(s: String): String = buildString {
       for (c in s) {
         when (c) {
           '\\' -> append("\\\\")
@@ -54,31 +54,32 @@ object Json {
         }
       }
     }
+  }
 
-  class Reader(val node: JsonElement) {
+  class JsonReader(val node: JsonElement) {
 
-    operator fun get(key: String): Reader {
+    operator fun get(key: String): JsonReader {
       val obj = node as? JsonElement.Obj
         ?: error("Not an object, cannot access key '$key'")
       val value = obj.value[key]
         ?: error("Key '$key' not found in object")
-      return Reader(value)
+      return JsonReader(value)
     }
 
-    operator fun get(index: Int): Reader {
+    operator fun get(index: Int): JsonReader {
       val arr = node as? JsonElement.Arr
         ?: error("Not an array, cannot access index $index")
       val value = arr.value.getOrNull(index)
         ?: error("Index $index out of bounds (size=${arr.value.size})")
-      return Reader(value)
+      return JsonReader(value)
     }
 
-    val obj: Map<String, Reader>
-      get() = (node as? JsonElement.Obj)?.value?.mapValues { Reader(it.value) }
+    val obj: Map<String, JsonReader>
+      get() = (node as? JsonElement.Obj)?.value?.mapValues { JsonReader(it.value) }
         ?: error("Expected object but was $node")
 
-    val arr: List<Reader>
-      get() = (node as? JsonElement.Arr)?.value?.map(::Reader)
+    val arr: List<JsonReader>
+      get() = (node as? JsonElement.Arr)?.value?.map(::JsonReader)
         ?: error("Expected array but was $node")
 
     val string: String
@@ -113,7 +114,7 @@ object Json {
 
   }
 
-  class Parser(private val s: String) {
+  class JsonParser(private val s: String) {
 
     private var i = 0
 
@@ -260,6 +261,7 @@ object Json {
       if (peek() != c) error("Expected '$c'")
       i++
     }
+
   }
 
 }

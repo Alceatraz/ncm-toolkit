@@ -1,9 +1,9 @@
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import top.btswork.ncmtoolkit.libncm.ncm.core.MetadataRaw
+import top.btswork.ncmtoolkit.libncm.ncm.schema.toMetadata
 import top.btswork.ncmtoolkit.tool.io.fs.Recursive
-import top.btswork.ncmtoolkit.libncm.LibNcm
-import top.btswork.ncmtoolkit.libncm.core.MetadataRaw
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -39,7 +39,7 @@ class MakeupTest {
       for (path in input) {
 
         val bytes = Files.readAllBytes(path)
-        val metadata = LibNcm.getMetadataParser().parse(MetadataRaw(bytes))
+        val metadata = MetadataRaw(bytes).toMetadata()
 
         val picId = metadata.albumPicDocId
 

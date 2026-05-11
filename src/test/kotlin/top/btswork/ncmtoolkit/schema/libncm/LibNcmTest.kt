@@ -1,6 +1,7 @@
 package top.btswork.ncmtoolkit.schema.libncm
 
 import top.btswork.ncmtoolkit.libncm.LibNcm
+import top.btswork.ncmtoolkit.tool.io.stream.Readers
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -50,7 +51,8 @@ class LibNcmTest {
     val path = Paths.get("""C:\Users\netuser\Music\App-NE\VipSongsDownload\Infant Annihilator,Storm Strope\The Battle of Yaldabaoth\Ov Sacrament And Sincest.ncm""")
     val channel = FileChannel.open(path, StandardOpenOption.READ)
     val byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size())
-    val (metadata, picture, content) = LibNcm.parse(byteBuffer)
+    val reader = Readers.getInstance(byteBuffer)
+    val (metadata, picture, content) = LibNcm.parse(reader)
     println(metadata)
   }
 

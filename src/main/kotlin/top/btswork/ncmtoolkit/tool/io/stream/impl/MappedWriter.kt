@@ -1,7 +1,6 @@
 package top.btswork.ncmtoolkit.tool.io.stream.impl
 
 import top.btswork.ncmtoolkit.tool.io.stream.Writer
-import top.btswork.ncmtoolkit.tool.io.stream.core.ByteBufferWriter
 import java.nio.channels.FileChannel
 
 class MappedWriter(

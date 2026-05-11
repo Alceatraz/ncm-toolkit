@@ -1,8 +1,8 @@
 package top.btswork.ncmtoolkit.libtag.module.flac.core
 
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.Block
 import top.btswork.ncmtoolkit.tool.io.stream.Reader
 import top.btswork.ncmtoolkit.tool.io.stream.Writer
-import top.btswork.ncmtoolkit.libtag.module.flac.schema.Block
 import java.nio.ByteBuffer
 
 interface FlacProcessorFactory {
@@ -12,15 +12,24 @@ interface FlacProcessorFactory {
 
 interface FlacReader {
   fun Reader.checkMagic(): Boolean
-  fun Reader.parseBlocks(): List<Block>
-  fun Reader.sliceContent(): ByteBuffer
+  fun Reader.parseBlocks(): FlacBlocks
+  fun Reader.sliceContent(): FlacStream
 }
 
 interface FlacWriter {
-  fun Writer.save(audioFile: FlacAudioFile)
+  fun Writer.save(flacFile: FlacFile)
+  fun Writer.save(flacBlocks: FlacBlocks, flacStream: FlacStream)
 }
 
-class FlacAudioFile(
-  val blocks: List<Block>,
-  val content: ByteBuffer,
+data class FlacFile(
+  val flacBlocks: FlacBlocks,
+  val flacStream: FlacStream,
+)
+
+@JvmInline value class FlacBlocks(
+  val value: List<Block>,
+)
+
+@JvmInline value class FlacStream(
+  val value: ByteBuffer,
 )

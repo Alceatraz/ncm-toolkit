@@ -1,4 +1,4 @@
-package top.btswork.ncmtoolkit.libtag.module.flac.schema
+package top.btswork.ncmtoolkit.libtag.module.flac.schema.block
 
 const val STREAMINFO = 0.toByte()
 const val PADDING = 1.toByte()
@@ -11,5 +11,3 @@ const val PICTURE = 6.toByte()
 sealed interface Block {
   fun getType(): Byte
 }
-
-

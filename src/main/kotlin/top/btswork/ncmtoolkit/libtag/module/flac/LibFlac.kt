@@ -9,8 +9,7 @@ object LibFlac {
 
   private val _FLAC_MAGIC = byteArrayOf(0x66, 0x4C, 0x61, 0x43) // "fLaC"
 
-  val FLAC_MAGIC: ByteArray
-    get() = _FLAC_MAGIC.clone()
+  val FLAC_MAGIC get() = _FLAC_MAGIC.clone()
 
   private var factory: FlacProcessorFactory = FlacProcessorFactoryImpl()
 

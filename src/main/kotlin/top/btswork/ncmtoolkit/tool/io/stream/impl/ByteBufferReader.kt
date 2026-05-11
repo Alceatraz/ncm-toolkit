@@ -1,4 +1,4 @@
-package top.btswork.ncmtoolkit.tool.io.stream.core
+package top.btswork.ncmtoolkit.tool.io.stream.impl
 
 import top.btswork.ncmtoolkit.tool.io.stream.Reader
 import java.nio.ByteBuffer
@@ -6,24 +6,6 @@ import java.nio.ByteBuffer
 class ByteBufferReader(
   private val delegate: ByteBuffer,
 ) : Reader {
-
-  override fun current(): Int = delegate.position()
-  override fun remaining(): Int = delegate.remaining()
-
-  override fun seek(position: Int) {
-    delegate.position(position)
-  }
-
-  override fun skip(distance: Int) {
-    delegate.position(current() + distance)
-  }
-
-  override fun get(length: Int): ByteArray {
-    require(length <= delegate.remaining()) {
-      "ByteBuffer remain content less then $length byte"
-    }
-    return ByteArray(length).also { delegate.get(it) }
-  }
 
   override fun getInteger8(): Byte {
     require(1 <= delegate.remaining()) {
@@ -65,13 +47,6 @@ class ByteBufferReader(
       "ByteBuffer remain content less then 8 bytes"
     }
     return delegate.getDouble()
-  }
-
-  override fun get(length: Int, index: Int): ByteArray {
-    require(index + length <= delegate.limit()) {
-      "ByteBuffer remain content less then $length byte"
-    }
-    return ByteArray(length).also { delegate.get(it) }
   }
 
   override fun getInteger8(index: Int): Byte {
@@ -116,11 +91,32 @@ class ByteBufferReader(
     return delegate.getDouble(index)
   }
 
+  override fun seek(position: Int): ByteBuffer = delegate.position(position)
+  override fun skip(distance: Int): ByteBuffer = delegate.position(current() + distance)
+
+  override fun current(): Int = delegate.position()
+  override fun remaining(): Int = delegate.remaining()
+
+  override fun get(length: Int): ByteArray {
+    require(length <= delegate.limit()) {
+      "ByteBuffer remaining less then $length byte"
+    }
+    return ByteArray(length).also {
+      delegate.get(it)
+    }
+  }
+
+  override fun get(length: Int, index: Int): ByteArray {
+    require(index + length <= delegate.limit()) {
+      "ByteBuffer remaining less then $length byte from $index"
+    }
+    return ByteArray(length).also {
+      delegate.get(index, it, 0, length)
+    }
+  }
+
   override fun slice(length: Int, index: Int): ByteBuffer {
     return delegate.slice(index, length)
   }
 
-  override fun sub(length: Int, index: Int): Reader {
-    return ByteBufferReader(delegate.slice(index, length))
-  }
 }

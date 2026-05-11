@@ -1,7 +1,6 @@
 package top.btswork.ncmtoolkit.tool.io.stream.impl
 
 import top.btswork.ncmtoolkit.tool.io.stream.Reader
-import top.btswork.ncmtoolkit.tool.io.stream.core.ByteBufferReader
 import java.nio.channels.FileChannel
 
 class MappedReader(
