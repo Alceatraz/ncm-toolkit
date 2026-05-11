@@ -226,6 +226,7 @@ class FlacReaderImpl : FlacReader {
       val success = flacBitReader.skipFrameBody(frameInfo)
 
       if (success) {
+
         end = current()
 
         val frameContentLen = end - position - 2
@@ -247,7 +248,10 @@ class FlacReaderImpl : FlacReader {
     }
 
     if (begin < 0 || end < 0) error("No frame found")
-    if (enableStrictSamples && accumulatedSamples != totalSamples) error("samples count mismatch $accumulatedSamples / $totalSamples")
+
+    if (enableStrictSamples) require(accumulatedSamples != totalSamples) {
+      "samples count mismatch $accumulatedSamples / $totalSamples"
+    }
 
     if (DEBUG) System.err.println("$begin -> $end")
 

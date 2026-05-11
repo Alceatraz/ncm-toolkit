@@ -30,23 +30,10 @@ class LibFlacFileTest {
       val blocks = reader.parseBlocks()
 
       val block = blocks.value[0] as StreamInfoBlock
-      println(block)
-
-      /*      blocks.value.forEach {
-
-              when (it) {
-                is VorbisCommentBlock -> {
-                  println("VB VENDOR " + it.vendor)
-                  it.store.forEach { pair ->
-                    println("${pair.first}: ${pair.second}")
-                  }
-                }
-                else -> {}
-              }
-
-            }*/
 
       val flacStream = reader.sliceContent(block)
+
+      println("""$block - ${flacStream.value.limit()} / ${path.fileSize()}""")
 
     }
 
