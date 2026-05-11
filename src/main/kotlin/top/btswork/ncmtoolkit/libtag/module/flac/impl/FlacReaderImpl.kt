@@ -22,6 +22,8 @@ import top.btswork.ncmtoolkit.tool.io.stream.Reader
 import top.btswork.ncmtoolkit.tool.reverseBytes
 import java.nio.charset.StandardCharsets
 
+const val enableVendorTrim = false
+
 class FlacReaderImpl : FlacReader {
 
   override fun Reader.checkMagic(): Boolean = LibFlac.FLAC_MAGIC contentEquals get(4)
@@ -148,7 +150,7 @@ class FlacReaderImpl : FlacReader {
       val index = item.indexOf('=')
 
       val itemKey = item.substring(0, index)
-      val itemValue = item.substring(index + 1).trim()
+      val itemValue = item.substring(index + 1).let { if (enableVendorTrim) it.trim() else it }
 
       store.add(itemKey to itemValue)
     }
