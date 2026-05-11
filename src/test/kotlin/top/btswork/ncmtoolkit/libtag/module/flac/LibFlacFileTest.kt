@@ -1,12 +1,12 @@
 package top.btswork.ncmtoolkit.libtag.module.flac
 
-import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlock
 import top.btswork.ncmtoolkit.tool.io.fs.Recursive
 import top.btswork.ncmtoolkit.tool.io.stream.impl.MappedReader
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import kotlin.io.path.fileSize
 import kotlin.io.path.name
 import kotlin.test.Test
 
@@ -28,18 +28,19 @@ class LibFlacFileTest {
 
       val blocks = reader.parseBlocks()
 
-      blocks.value.forEach {
+      /*      blocks.value.forEach {
 
-        when (it) {
-          is VorbisCommentBlock -> {
-            println("VB VENDOR " + it.vendor)
-            it.store.forEach { pair ->
-              println("${pair.first}: ${pair.second}")
-            }
-          }
-          else -> {}
-        }
-      }
+              when (it) {
+                is VorbisCommentBlock -> {
+                  println("VB VENDOR " + it.vendor)
+                  it.store.forEach { pair ->
+                    println("${pair.first}: ${pair.second}")
+                  }
+                }
+                else -> {}
+              }
+
+            }*/
 
       val flacStream = reader.sliceContent()
 
@@ -54,9 +55,15 @@ class LibFlacFileTest {
       it.name.endsWith("flac")
     }
 
-    recursive.iterate {
-      println(it)
-      flacRead(it)
+    val arr = ArrayList<Path>()
+    recursive.iterate { arr.add(it) }
+
+    arr.parallelStream().forEach {
+      try {
+        flacRead(it)
+      } catch (e: Exception) {
+        System.err.println("""$it ${e.message} | ${it.fileSize()}""")
+      }
     }
 
   }
@@ -68,6 +75,8 @@ class LibFlacFileTest {
     flacRead(path)
 
   }
+
+
 
 }
 

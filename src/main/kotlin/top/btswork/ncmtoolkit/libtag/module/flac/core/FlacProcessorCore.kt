@@ -1,6 +1,7 @@
 package top.btswork.ncmtoolkit.libtag.module.flac.core
 
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.Block
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.StreamInfoBlock
 import top.btswork.ncmtoolkit.tool.io.stream.Reader
 import top.btswork.ncmtoolkit.tool.io.stream.Writer
 import java.nio.ByteBuffer
@@ -14,6 +15,7 @@ interface FlacReader {
   fun Reader.checkMagic(): Boolean
   fun Reader.parseBlocks(): FlacBlocks
   fun Reader.sliceContent(): FlacStream
+  fun Reader.sliceContent(streamInfoBlock: StreamInfoBlock): FlacStream
 }
 
 interface FlacWriter {

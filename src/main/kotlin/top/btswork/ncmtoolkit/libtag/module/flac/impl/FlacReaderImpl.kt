@@ -15,6 +15,7 @@ import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.PaddingBlock
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.Picture
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.PictureBlock
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.PictureType
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.StreamInfoBlock
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlock
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlocks
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.Width
@@ -48,6 +49,7 @@ class FlacReaderImpl : FlacReader {
       if (DEBUG) println("BLOCK $start -> $lastFlag: $blockType size=$blockLength")
 
       val block = when (blockType) {
+        0 -> parseStreamInfoBlock()
         1 -> parsePaddingBlock(blockLength)
         6 -> parsePictureBlock()
         4 -> parseVorbisCommentBlock()
@@ -68,9 +70,39 @@ class FlacReaderImpl : FlacReader {
 
   }
 
+  private fun Reader.parseStreamInfoBlock(): StreamInfoBlock {
+
+    val minBlockSize = getInteger16().toInt() and 0xFFFF
+    val maxBlockSize = getInteger16().toInt() and 0xFFFF
+    val minFrameSize = readU24()
+    val maxFrameSize = readU24()
+
+    // 64-bit packed: sampleRate(20) + channels(3) + bitsPerSample(5) + totalSamples(36)
+    val packed = getInteger64()
+
+    val sampleRate = ((packed ushr 44) and 0xFFFFFL).toInt()
+    val channels = ((packed ushr 41) and 0x7L).toInt() + 1
+    val bitsPerSample = ((packed ushr 36) and 0x1FL).toInt() + 1
+    val totalSamples = packed and 0xFFFFFFFFFL
+
+    val md5 = get(16)
+
+    return StreamInfoBlock(
+      minBlockSize,
+      maxBlockSize,
+      minFrameSize,
+      maxFrameSize,
+      sampleRate,
+      channels,
+      bitsPerSample,
+      totalSamples,
+      md5,
+    )
+
+  }
+
   private fun Reader.parsePaddingBlock(length: Int): PaddingBlock {
     skip(length)
-    println("SKIP $length")
     return PaddingBlock(length)
   }
 
@@ -163,8 +195,14 @@ class FlacReaderImpl : FlacReader {
   //= ==================================================================================================================
 
   override fun Reader.sliceContent(): FlacStream {
+    TODO("")
+  }
+
+  override fun Reader.sliceContent(streamInfoBlock: StreamInfoBlock): FlacStream {
 
     val flacBitReader = FlacBitReader(this)
+
+    var samples = 0
 
     var begin = -1
     var end = -1
@@ -197,7 +235,7 @@ class FlacReaderImpl : FlacReader {
 
     if (begin < 0 || end < 0) error("No frame found")
 
-    if (DEBUG) System.err.println("$begin -> $end ")
+    if (DEBUG) System.err.println("$begin -> $end")
 
     return (end - begin).let {
       slice(it, begin)
@@ -287,18 +325,13 @@ class FlacReaderImpl : FlacReader {
     if (remaining() < 1) return null
 
     val storedCRC = getInteger8().toInt() and 0xFF
-
     val crcEnd = current() - 1
-
     val crc = get(crcEnd - syncStart, syncStart).crc8()
 
-
     if (storedCRC != crc) {
-      if (enableThrowWhenFalseSync) error("CRC is $crc should $storedCRC")
+      if (enableThrowWhenFalseSync) error("CRC $crc $storedCRC $syncStart $crcEnd")
       return null
     }
-
-    // skip(1)
 
     return FrameInfo(
       blockSizeCode,
@@ -548,6 +581,8 @@ class FlacReaderImpl : FlacReader {
   }
 
   //= ==================================================================================================================
+
+  private fun Reader.readU24(): Int = ((getInteger8().toInt() and 0xFF) shl 16) or ((getInteger8().toInt() and 0xFF) shl 8) or (getInteger8().toInt() and 0xFF)
 
   private fun ByteArray.crc8(): Int {
     var crc = 0
