@@ -34,16 +34,18 @@ class FlacReaderImpl : FlacReader {
 
     while (true) {
 
+      val start = current()
+
       val head = getInteger32()
 
       val lastFlag = head < 0
       val blockType = head shr 24 and 0b01111111
       val blockLength: Int = head and 0b00000000_11111111_11111111_11111111
 
-      if (DEBUG) println("BLOCK ${current()} -> $lastFlag: $blockType size=$blockLength")
+      if (DEBUG) println("BLOCK $start -> $lastFlag: $blockType size=$blockLength")
 
       val block = when (blockType) {
-        1 -> parsePaddingBlock()
+        1 -> parsePaddingBlock(blockLength)
         6 -> parsePictureBlock()
         4 -> parseVorbisCommentBlock()
         else -> {
@@ -63,9 +65,9 @@ class FlacReaderImpl : FlacReader {
 
   }
 
-  private fun Reader.parsePaddingBlock(): PaddingBlock {
-    val length = getInteger32()
+  private fun Reader.parsePaddingBlock(length: Int): PaddingBlock {
     skip(length)
+    println("SKIP $length")
     return PaddingBlock(length)
   }
 
@@ -193,7 +195,7 @@ class FlacReaderImpl : FlacReader {
     if (begin < 0 || end < 0) error("No frame found")
     if (DEBUG) System.err.println("$begin -> $end ")
 
-    return (current() - begin).let {
+    return (end - begin).let {
       slice(it, begin)
     }.let {
       FlacStream(it)

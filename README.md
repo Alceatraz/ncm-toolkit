@@ -70,12 +70,12 @@ https://music.163.com/api/artist/albums/102714?limit=0
 
 ### 专辑信息 AlbumID
 
-> 无效 album.songs[].album.artist
-> 有效 album.songs[].album.artists.id
-> 有效 album.songs[].album.artists.name
-> 有效 songs.album.artist{}
-> 有效 album.artists.id
-> 有效 album.artists.name
+> - 无效 album.songs[].album.artist
+> - 有效 album.songs[].album.artists.id
+> - 有效 album.songs[].album.artists.name
+> - 有效 songs.album.artist{}
+> - 有效 album.artists.id
+> - 有效 album.artists.name
 
 - AlbumName
 - AlbumCoverID
