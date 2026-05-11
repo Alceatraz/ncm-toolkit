@@ -1,5 +1,6 @@
 package top.btswork.ncmtoolkit.libtag.module.flac
 
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.StreamInfoBlock
 import top.btswork.ncmtoolkit.tool.io.fs.Recursive
 import top.btswork.ncmtoolkit.tool.io.stream.impl.MappedReader
 import java.nio.channels.FileChannel
@@ -28,6 +29,9 @@ class LibFlacFileTest {
 
       val blocks = reader.parseBlocks()
 
+      val block = blocks.value[0] as StreamInfoBlock
+      println(block)
+
       /*      blocks.value.forEach {
 
               when (it) {
@@ -42,7 +46,7 @@ class LibFlacFileTest {
 
             }*/
 
-      val flacStream = reader.sliceContent()
+      val flacStream = reader.sliceContent(block)
 
     }
 
@@ -59,6 +63,7 @@ class LibFlacFileTest {
     recursive.iterate { arr.add(it) }
 
     arr.parallelStream().forEach {
+
       try {
         flacRead(it)
       } catch (e: Exception) {
@@ -70,13 +75,9 @@ class LibFlacFileTest {
 
   @Test
   fun test01() {
-
     val path = Paths.get("""C:\Temp\NCM\test-r.flac""")
     flacRead(path)
-
   }
-
-
 
 }
 

@@ -202,12 +202,13 @@ class FlacReaderImpl : FlacReader {
 
     val flacBitReader = FlacBitReader(this)
 
-    var samples = 0
+    var accumulatedSamples = 0L
+    val totalSamples = streamInfoBlock.totalSamples
 
     var begin = -1
     var end = -1
 
-    while (true) {
+    while (accumulatedSamples < totalSamples) {
 
       val position = nextSync()
 
@@ -225,7 +226,8 @@ class FlacReaderImpl : FlacReader {
 
       if (success) {
         end = current()
-        if (DEBUG) println("FRAME - SYNC $position ~ $end skip=${end - position} true")
+        accumulatedSamples += frameInfo.samples().toLong()
+        if (DEBUG) println("FRAME - SYNC $position ~ $end skip=${end - position} true samples=$accumulatedSamples/$totalSamples")
       } else {
         if (DEBUG) println("FRAME - SYNC $position / FALSE (Body Parse Failed)")
         break
@@ -526,8 +528,18 @@ class FlacReaderImpl : FlacReader {
     val channelAssignment: Int,
     val sampleSizeCode: Int,
     val codedNumber: Int,
-    val customBlockSize: Int, // 新增：保存自定义块大小
-  )
+    val customBlockSize: Int,
+  ) {
+
+    fun samples(): Int = when (blockSizeCode) {
+      1 -> 192
+      in 2..5 -> 576 shl (blockSizeCode - 2)
+      6, 7 -> customBlockSize + 1
+      in 8..15 -> 256 shl (blockSizeCode - 8)
+      else -> error("Invalid blockSizeCode $blockSizeCode")
+    }
+
+  }
 
   class FlacBitReader(val reader: Reader) {
 
