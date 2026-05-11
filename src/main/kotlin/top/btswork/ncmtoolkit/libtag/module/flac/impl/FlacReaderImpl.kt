@@ -23,6 +23,7 @@ import top.btswork.ncmtoolkit.tool.reverseBytes
 import java.nio.charset.StandardCharsets
 
 const val enableVendorTrim = false
+const val enableThrowWhenFalseSync = true
 
 class FlacReaderImpl : FlacReader {
 
@@ -173,7 +174,7 @@ class FlacReaderImpl : FlacReader {
       val position = nextSync()
 
       if (position < 0) break
-      val frameInfo = confirmHeader()
+      val frameInfo = confirmHeader(position)
 
       if (frameInfo == null) {
         if (DEBUG) println("FRAME - SYNC $position / FALSE (Header Invalid)")
@@ -195,6 +196,7 @@ class FlacReaderImpl : FlacReader {
     }
 
     if (begin < 0 || end < 0) error("No frame found")
+
     if (DEBUG) System.err.println("$begin -> $end ")
 
     return (end - begin).let {
@@ -225,7 +227,7 @@ class FlacReaderImpl : FlacReader {
 
   }
 
-  private fun Reader.confirmHeader(): FrameInfo? {
+  private fun Reader.confirmHeader(syncStart: Int): FrameInfo? {
 
     if (remaining() < 2) return null
 
@@ -284,7 +286,19 @@ class FlacReaderImpl : FlacReader {
 
     if (remaining() < 1) return null
 
-    skip(1)
+    val storedCRC = getInteger8().toInt() and 0xFF
+
+    val crcEnd = current() - 1
+
+    val crc = get(crcEnd - syncStart, syncStart).crc8()
+
+
+    if (storedCRC != crc) {
+      if (enableThrowWhenFalseSync) error("CRC is $crc should $storedCRC")
+      return null
+    }
+
+    // skip(1)
 
     return FrameInfo(
       blockSizeCode,
@@ -489,7 +503,7 @@ class FlacReaderImpl : FlacReader {
 
     fun getBit(): Int {
       if (bitCount == 0) {
-        if (reader.remaining() <= 0) return 0
+        if (reader.remaining() <= 0) error("FLAC bit reader exhausted at byte ${reader.current()}")
         bitBuffer = reader.getInteger8().toInt() and 0xFF
         bitCount = 8
       }
@@ -509,7 +523,7 @@ class FlacReaderImpl : FlacReader {
       }
       if (n >= 8) {
         val bytes = n / 8
-        if (reader.remaining() < bytes) return
+        if (reader.remaining() < bytes) error("FLAC bit reader exhausted at byte ${reader.current()}")
         reader.skip(bytes)
         n -= bytes * 8
       }
@@ -531,6 +545,24 @@ class FlacReaderImpl : FlacReader {
       bitBuffer = 0
     }
 
+  }
+
+  //= ==================================================================================================================
+
+  private fun ByteArray.crc8(): Int {
+    var crc = 0
+    forEach {
+      crc = crc xor (it.toInt() and 0xFF)
+      repeat(8) {
+        crc = if (crc and 0x80 != 0) {
+          (crc shl 1) xor 0x07
+        } else {
+          crc shl 1
+        }
+        crc = crc and 0xff
+      }
+    }
+    return crc
   }
 
 }

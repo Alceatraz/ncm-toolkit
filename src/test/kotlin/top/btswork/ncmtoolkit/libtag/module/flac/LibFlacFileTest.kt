@@ -1,25 +1,22 @@
 package top.btswork.ncmtoolkit.libtag.module.flac
 
-import org.junit.jupiter.api.Test
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlock
-import top.btswork.ncmtoolkit.tool.io.stream.impl.ByteBufferReader
-import java.nio.ByteBuffer
+import top.btswork.ncmtoolkit.tool.io.fs.Recursive
+import top.btswork.ncmtoolkit.tool.io.stream.impl.MappedReader
 import java.nio.channels.FileChannel
-import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import kotlin.io.path.readBytes
+import kotlin.io.path.name
+import kotlin.test.Test
 
 class LibFlacFileTest {
 
-  @Test
-  fun test01() {
+  fun flacRead(path: Path) {
 
-    println("TEST01")
+    val fileChannel: FileChannel = FileChannel.open(path, StandardOpenOption.READ)!!
 
-    val bytes = Paths.get("""C:\Temp\NCM\test.flac""").readBytes()
-    val buffer = ByteBuffer.wrap(bytes)
-    val reader = ByteBufferReader(buffer)
+    val reader = MappedReader(fileChannel)
 
     val flacReader = LibFlac.getReader()
 
@@ -34,36 +31,43 @@ class LibFlacFileTest {
       blocks.value.forEach {
 
         when (it) {
-
           is VorbisCommentBlock -> {
             println("VB VENDOR " + it.vendor)
             it.store.forEach { pair ->
               println("${pair.first}: ${pair.second}")
             }
-
           }
-
-          else -> {
-
-          }
+          else -> {}
         }
-
       }
 
-      val content = reader.sliceContent()
-
-      val output = Paths.get("""C:\Temp\NCM\test-rewrite.flac""")
-
-      Files.deleteIfExists(output)
-      Files.createFile(output)
-
-      val fileChannel: FileChannel = FileChannel.open(output, StandardOpenOption.WRITE)!!
-
-
-      Unit
+      val flacStream = reader.sliceContent()
 
     }
 
   }
 
+  @Test
+  fun test00() {
+
+    val recursive = Recursive.getPathRecursive(Paths.get("""C:\Users\netuser\Music\App-NE""")) {
+      it.name.endsWith("flac")
+    }
+
+    recursive.iterate {
+      println(it)
+      flacRead(it)
+    }
+
+  }
+
+  @Test
+  fun test01() {
+
+    val path = Paths.get("""C:\Temp\NCM\test-r.flac""")
+    flacRead(path)
+
+  }
+
 }
+
