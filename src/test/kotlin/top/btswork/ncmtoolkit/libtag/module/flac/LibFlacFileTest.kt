@@ -1,6 +1,7 @@
 package top.btswork.ncmtoolkit.libtag.module.flac
 
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.StreamInfoBlock
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlock
 import top.btswork.ncmtoolkit.tool.io.fs.Recursive
 import top.btswork.ncmtoolkit.tool.io.stream.impl.MappedReader
 import java.nio.channels.FileChannel
@@ -28,6 +29,11 @@ class LibFlacFileTest {
       }
 
       val blocks = reader.parseBlocks()
+
+      val vorbisCommentBlock = blocks.value.filterIsInstance<VorbisCommentBlock>().first()
+
+      println(vorbisCommentBlock.vendor)
+      vorbisCommentBlock.store.forEach { pair -> println(pair.first + "=" + pair.second) }
 
       val block = blocks.value[0] as StreamInfoBlock
 
@@ -64,6 +70,21 @@ class LibFlacFileTest {
   fun test01() {
     val path = Paths.get("""C:\Temp\NCM\test-r.flac""")
     flacRead(path)
+  }
+
+  @Test
+  fun test02() {
+
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\Lune - Hymns To The Lunar Realm - 01 Lustrous Gates.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\Lune - Hymns To The Lunar Realm - 02 Of White Silk And Marble Pillars.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\Lune - Hymns To The Lunar Realm - 03 Stardust Elysium.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\Lune - Hymns To The Lunar Realm - 04 Hymns To The Lunar Realm.flac"""))
+
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\1.01 - When Time Fades Away.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\1.02 - Sons Of Winter And Stars.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\1.03 - Land Of Snow And Sorrow.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\1.04 - Darkness And Frost.flac"""))
+    flacRead(Paths.get("""C:\Temp\NCM\bandcamp\1.05 - Time.flac"""))
   }
 
 }

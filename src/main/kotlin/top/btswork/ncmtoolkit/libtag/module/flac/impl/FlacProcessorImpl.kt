@@ -2,7 +2,7 @@ package top.btswork.ncmtoolkit.libtag.module.flac.impl
 
 import top.btswork.ncmtoolkit.libtag.module.flac.core.FlacProcessorFactory
 
-const val DEBUG = false
+const val VERBOSE = false
 
 class FlacProcessorFactoryImpl : FlacProcessorFactory {
   val readerImpl = FlacReaderImpl()

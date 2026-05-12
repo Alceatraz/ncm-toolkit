@@ -47,7 +47,7 @@ class FlacReaderImpl : FlacReader {
       val blockType = head shr 24 and 0b01111111
       val blockLength: Int = head and 0b00000000_11111111_11111111_11111111
 
-      if (DEBUG) println("BLOCK $start -> $lastFlag: $blockType size=$blockLength")
+      if (VERBOSE) println("BLOCK $start -> $lastFlag: $blockType size=$blockLength")
 
       val block = when (blockType) {
         0 -> parseStreamInfoBlock()
@@ -217,7 +217,15 @@ class FlacReaderImpl : FlacReader {
       val frameInfo = confirmHeader(position)
 
       if (frameInfo == null) {
-        if (DEBUG) println("FRAME - SYNC $position / FALSE (Header Invalid)")
+        //        if (VERBOSE)
+        println("FRAME - SYNC $position / FALSE (Header Invalid)")
+
+        val data = get(128, position)
+          .map { it.toInt() and 0xff }
+          .map { Integer.toHexString(it) }
+          .map { it.uppercase() }
+        println(data.joinToString(" "))
+
         continue
       }
 
@@ -239,9 +247,9 @@ class FlacReaderImpl : FlacReader {
         }
 
         accumulatedSamples += frameInfo.samples().toLong()
-        if (DEBUG) println("FRAME - SYNC $position ~ $end skip=${end - position} true samples=$accumulatedSamples/$totalSamples")
+        if (VERBOSE) println("FRAME - SYNC $position ~ $end skip=${end - position} true samples=$accumulatedSamples/$totalSamples")
       } else {
-        if (DEBUG) println("FRAME - SYNC $position / FALSE (Body Parse Failed)")
+        if (VERBOSE) println("FRAME - SYNC $position / FALSE (Body Parse Failed)")
         break
       }
 
@@ -249,11 +257,15 @@ class FlacReaderImpl : FlacReader {
 
     if (begin < 0 || end < 0) error("No frame found")
 
-    if (enableStrictSamples) require(accumulatedSamples != totalSamples) {
-      "samples count mismatch $accumulatedSamples / $totalSamples"
+    if (accumulatedSamples != totalSamples) {
+      if (enableStrictSamples) {
+        error("samples count mismatch $accumulatedSamples / $totalSamples")
+      } else {
+        System.err.println("samples count mismatch $accumulatedSamples / $totalSamples")
+      }
     }
 
-    if (DEBUG) System.err.println("$begin -> $end")
+    if (VERBOSE) System.err.println("$begin -> $end")
 
     return (end - begin).let {
       slice(it, begin)

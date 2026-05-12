@@ -1,6 +1,7 @@
 package top.btswork.ncmtoolkit.libtag.module.flac
 
 import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.StreamInfoBlock
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlock
 import top.btswork.ncmtoolkit.tool.io.stream.impl.MappedReader
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
@@ -484,6 +485,14 @@ class FlacFileTest {
         require(mappedReader.checkMagic()) { "Not FLAC file" }
 
         val blocks = mappedReader.parseBlocks()
+
+        val vorbisCommentBlock = blocks.value.filterIsInstance<VorbisCommentBlock>().first()
+
+        println(vorbisCommentBlock.vendor)
+
+        vorbisCommentBlock.store.forEach { pair ->
+          println(pair.first + "=" + pair.second)
+        }
 
         val block = blocks.value[0] as StreamInfoBlock
         println(block)
