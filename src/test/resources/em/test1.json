@@ -1,0 +1,23 @@
+{
+    "musicId": "525565562",
+    "musicName": "季節は次々死んでいく",
+    "artist": [
+        ["amazarashi", "18480"]
+    ],
+    "albumId": "37019899",
+    "album": "季節は次々死んでいく",
+    "albumPicDocId": "109951170610233835",
+    "albumPic": "http://p3.music.126.net/8uYM8NbeCRvxif3219sR0w==/109951170610233835.jpg",
+    "bitrate": 999000,
+    "mp3DocId": "f32db02f086032bb109766268a5fb4af",
+    "duration": 338941,
+    "mvId": "392434",
+    "alias": ["TV动画《东京喰种√A》ED"],
+    "transNames": ["季节接连逝去"],
+    "format": "flac",
+    "fee": 1,
+    "volumeDelta": -10.9678,
+    "privilege": {
+        "flag": 1540356
+    }
+}

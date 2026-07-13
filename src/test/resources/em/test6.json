@@ -1,0 +1,22 @@
+{
+    "musicId": "1390237936",
+    "musicName": "Ov Sacrament And Sincest",
+    "artist": [
+        ["Infant Annihilator", "964400"],
+        ["Storm Strope", 0]
+    ],
+    "albumId": "81560913",
+    "album": "The Battle of Yaldabaoth",
+    "albumPicDocId": "109951170504073928",
+    "albumPic": "http://p3.music.126.net/AR4E7HXNb4tQgrwsIqyWEQ==/109951170504073928.jpg",
+    "bitrate": 999000,
+    "mp3DocId": "dff385490a7710531f1dab55d64a0514",
+    "duration": 199157,
+    "mvId": "",
+    "alias": [],
+    "transNames": [],
+    "format": "flac",
+    "fee": 1,
+    "volumeDelta": -14.2617,
+    "privilege": {"flag": 3637252}
+}

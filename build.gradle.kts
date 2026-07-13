@@ -15,6 +15,8 @@ repositories {
 }
 
 dependencies {
+  implementation("org.jetbrains.kotlin:kotlin-reflect")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
   testImplementation(kotlin("test"))
 }
 
@@ -26,7 +28,10 @@ application {
   mainClass.set("top.btswork.ncmtoolkit.MainKt")
 }
 
+
+
 tasks.test {
+  maxHeapSize = "16G"
   useJUnitPlatform()
 }
 

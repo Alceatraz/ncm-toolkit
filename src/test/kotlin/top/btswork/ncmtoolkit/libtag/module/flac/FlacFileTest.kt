@@ -1,0 +1,565 @@
+package top.btswork.ncmtoolkit.libtag.module.flac
+
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.StreamInfoBlock
+import top.btswork.ncmtoolkit.libtag.module.flac.schema.block.VorbisCommentBlock
+import top.btswork.ncmtoolkit.tool.io.stream.impl.MappedReader
+import java.nio.channels.FileChannel
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
+import kotlin.io.path.fileSize
+import kotlin.test.Test
+
+class FlacFileTest {
+
+  val files = arrayOf(
+
+    """C:\Users\netuser\Music\App-NE\Crimson Shadows\Kings Among Men\Moonlit Skies and Bloody Tides.flac""",
+    """C:\Users\netuser\Music\App-NE\Cybernetika\Solar Nexus\Constellations.flac""",
+    """C:\Users\netuser\Music\App-NE\DJ GOOBLI BLOO\Chapel of the Robo-Priest Remixes\extratone remix (ft. GENE RAY).flac""",
+    """C:\Users\netuser\Music\App-NE\Dirk Reichardt\Kokowääh 2 (Original Motion Picture Soundtrack)\Weekend.flac""",
+    """C:\Users\netuser\Music\App-NE\Dreariness\My Mind is too Weak to Forget\My Mind Is Too Weak To Forget.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\Eskimo Callboy\Antichrist  Pornstyle.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\Eskimo Callboy\Hey Mrs. Dramaqueen.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\Eskimo Callboy\Intro.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\Eskimo Callboy\Monsieur Moustache vs. Clitcat.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\Eskimo Callboy\Outro.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\Eskimo Callboy\Prom Night.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\The Scene\Back in the Bizz.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\The Scene\Rooftop.flac""",
+    """C:\Users\netuser\Music\App-NE\Electric Callboy\The Scene\X.flac""",
+    """C:\Users\netuser\Music\App-NE\Epica\Consign to Oblivion\Consign to Oblivion (A New Age Dawns, Pt. 3).flac""",
+    """C:\Users\netuser\Music\App-NE\Epica\Consign to Oblivion\Hunab K'u (A New Age Dawns, Prologue).flac""",
+    """C:\Users\netuser\Music\App-NE\Equilibrium\Turis Fratyr\Heimdalls Ruf.flac""",
+    """C:\Users\netuser\Music\App-NE\Equilibrium\Turis Fratyr\Im Fackelschein.flac""",
+    """C:\Users\netuser\Music\App-NE\Equilibrium\Turis Fratyr\Turis Fratyr.flac""",
+    """C:\Users\netuser\Music\App-NE\Eternal Tears of Sorrow\未知专辑\New Dawn.flac""",
+    """C:\Users\netuser\Music\App-NE\Feuerschwanz\Auf`s Leben! (Limited Edition)\Seemannsliebe.flac""",
+    """C:\Users\netuser\Music\App-NE\God Is An Astronaut\All Is Violent, All Is Bright\All Is Violent, All Is Bright.flac""",
+    """C:\Users\netuser\Music\App-NE\Haggard\Eppur si muove\Gavotta in si-minore.flac""",
+    """C:\Users\netuser\Music\App-NE\Hans Zimmer,Lorne Balfe\Crysis 2 (Original Videogame Soundtrack)\Epilogue.flac""",
+    """C:\Users\netuser\Music\App-NE\Nachtblut\Apostasie\Mein Antlitz aschfahl vor Gram.flac""",
+    """C:\Users\netuser\Music\App-NE\Nachtblut\Shire Music Greatest Hits VOL.10Black Heart\Alles nur geklaut.flac""",
+    """C:\Users\netuser\Music\App-NE\Theatre of Tragedy\Musique\Machine.flac""",
+    """C:\Users\netuser\Music\App-NE\Thy Light\No Morrow Shall Dawn\Suici.De.spair.flac""",
+    """C:\Users\netuser\Music\App-NE\Various Artists\Destiny 2 Beyond Light (Original Soundtrack)\Deep Stone Lullaby.flac""",
+    """C:\Users\netuser\Music\App-NE\Vendex\Synth City\Synth City.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\5 Star Grave\Corpse Breed Syndrome\Ain＼'t That Saint.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Adrian Von Ziegler\The Celtic Collection III\Mists of Avalon.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Agalloch\The Mantle\A Celebration For The Death Of Man.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Alcest\Spiritual Instinct\L'île des morts.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Alexander Okunev\Dream World\Full Sail.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Alexander Okunev\Dream World\In the Name of Queen.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Alexey Omelchuk\Metro Last Light (Original Soundtrack)\The Farewell.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\All That Remains\The Fall of Ideals\Six.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\All Time Low\Dirty Work\Time-Bomb.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ana Alcaide\Como La Luna Y El Sol\La Galana Y El Mar.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Andy Blueman\Sea Tides (Cinematic Remake)\Sea Tides (Cinematic Remake).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anne Akiko Meyers,David Lockington,Engli\The Four SeasonsThe Vivaldi Album\Concerto No. 4 in F minor, Op. 8, RV 297, L'inverno (Winter)III. Allegro.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anne Akiko Meyers,David Lockington,English Chamber Orchestra\The Four SeasonsThe Vivaldi Album\Concerto No. 4 in F minor, Op. 8, RV 297, L'inverno (Winter)II. Largo.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anne Akiko Meyers,English Chamber Orchestra,David Lockington\The Four SeasonsThe Vivaldi Album\Concerto No. 2 in G minor, Op. 8, RV 315, L'estate (Summer)III. Presto.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Exile\Cycle II - Burning tongue - Sequence 1 - Against the Sail.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Exile\Cycle II - Burning tongue - Sequence 2 - Faith.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Exile\Cycle II - Burning tongue - Sequence 4 - First tasting of faecal matter.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Exile\Cycle l - Delusive Complexion - Sequence 3 - the Unveiled Mirror.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Exile\Cycle l - Delusive Complexion - Sequence 4 - Divert the Necessities of the Body.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Exile\Epilogue - Running of Mental Fluids.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\New Obscurantis Order\Hail Tyranny.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Redemption Process\Antinferno.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Redemption Process\Codex Veritas.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anorexia Nervosa\Redemption Process\Sister September.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Anthelion\Bloodshed Rebefallen\Snake Corpse.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Arch Enemy\Will To Power\City Baby Attacked by Rats (cover version).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Arch Enemy\Will To Power\Saturnine.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Arch Enemy\Will To Power\Set Flame to the Night.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Arch Enemy\Will To Power\The Race.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Attila\About That Life\Party With The Devil.flac""",
+    // """C:\Users\netuser\Music\App-NE\VipSongsDownload\Audiotricz, Ecstatic\Progressive Hardstyle\Intro.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Axel Rudi Pell\The Ballads\Falling Tears.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Axxis\Kingdom of the Night II\We Are the World.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Battle Beast\Master of Illusion\Master of Illusion.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Beast In Black\From Hell with Love\Sweet True Lies.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Before the Dawn\Deathstar Rising\Deathstar.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Before the Dawn\My Darkness\Unbreakable.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Breakdown of Sanity\Perception\Deliverance (feat. Patrick Schmid).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\CRYSTAL LAKE\Helix\+81.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Retrograde\Kaleidoscope.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Retrograde\SK-68.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Retrograde\The Fear Is Real.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Retrograde\Weight Of The World.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Retrograde\Zero.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Sudden Sky\(X).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Sudden Sky\2020.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Sudden Sky\BLURRY (out of place).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Sudden Sky\SEQU3NCE.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Sudden Sky\Under the Skin.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\Sudden Sky\what i am.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Fallout\Children Of Love.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Fallout\Evidence.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Fallout\Graveyard Souls.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Fallout\Oh, Catastrophe.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Fallout\Two's Too Many.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Resistance (Deluxe Edition)\MNSTR.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Crown the empire\The Resistance (Deluxe Edition)\Satellites (Act iii).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Cân Bardd\Nature Stays Silent\Underwater.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\D-Noise\Overheating\Driveradio.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dance With The Dead\Blackout\The Dawn.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Abandoned.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Dance of Wrath (怒りの舞).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Farewell to the Moon.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Judgment Day.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Onibi (鬼火、Demon Fire).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Prayer For the New Moon.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Dark Model\Ran (乱、Resistance).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Oath\Oath.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Saga\Prelude.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dark Model\Saga\Survivors.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Departures\Death Touches Us, from the Moment We Begin to Love\Sleepless.flac""",
+    //"""C:\Users\netuser\Music\App-NE\VipSongsDownload\Deuce, Electric Callboy, BastiBasti (Callejon)\We Are the Mess\Jagger Swagger.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dexter Britain\Sanguine\Sanguine.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Dreamtale\Wellon\Powerplay.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\E Nomine\Mitternacht\Mitternacht (Radio Edit).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eldamar\A Dark Forgotten Past\In Search for New Wisdom.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eldamar\The Force of the Ancient Land\Galaðwen the Eldar.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eldamar\The Force of the Ancient Land\New Beginning.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eldamar\The Force of the Ancient Land\The Border of Eldamar.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eldamar\The Force of the Ancient Land\Valkyrjur Ancient One.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eldamar\The Force of the Ancient Land\Winter Night.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Elderwind\The Colder the Night\Vast of Freedom.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\Eskimo Callboy 2010\Antichrist Sex Pornstyle.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\Eskimo Callboy 2010\Hey Mrs. Dramaqueen.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\Eskimo Callboy 2010\Monsieur Moustache Versus Clitcat.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\Eskimo Callboy 2010\Outro.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\Eskimo Callboy 2010\Prom Night.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\#elchtransformer.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\Blood Red Lips.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\CSTRP.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\Final Dance.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\Never Let You Know.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\RXL.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\Voodoo Circus.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Electric Callboy\We Are the Mess\We Are the Mess.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\Everything Remains As It Never Was.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\Kingdom Come Undone.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\Nil.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\Otherworld.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\Setlon.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\The Liminal Passage.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Everything Remains (As It Never Was)\Thousandfold.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\A Girls Oath.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Carnutian Forest.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Dessumiis Luge.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Gobanno.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Memento.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Sacrapos-At First Glance.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Sacrapos-The Disparaging Last Gaze.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\The Cauldron Of Renascence.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Evocation I-The Arcane Dominion\Within The Grove.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Helvetios\Hope.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Helvetios\Luxtos.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Origins\Eternity (Outro, MFIT).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Origins\Nothing (Intermezzo, MFIT).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Origins\Ogmios (Intermezzo, MFIT).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Origins\Origins (Intro, MFIT).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Slania\Anagantios.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Slania\Giamonios.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eluveitie\Slania\Samon.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Elysion\Someplace Better\Fairytale.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ensiferum\Two Paths\Ajattomasta Unesta (1).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ensiferum\Two Paths\Ajattomasta Unesta.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ensiferum\Two Paths\Unettomaan Aikaan (1).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ensiferum\Two Paths\Unettomaan Aikaan.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ensiferum\Winter Storm\Leniret Coram Tempestate.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Epica\Omega\Alpha-Anteludium-.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Epica\The Divine Conspiracy\La'Fetach Chatat Rovetz - The Last Embrace.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Epica\The Quantum Enigma\Originem.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Epica\The Quantum Enigma\The Fifth Guardian - Interlude.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Epica\The Quantum Enigma\Victims of Contingency.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Born to Be Epic (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Eternal Destination (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Helden (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Koyaaniskatsi (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Prey (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Rise Again (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Sehnsucht (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Sehnsucht.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Armageddon\Zum Horizont (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Erdentempel (Limited Edition)\Ankunft (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Erdentempel (Limited Edition)\Ankunft.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Erdentempel (Limited Edition)\The Unknown Episode (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Erdentempel (Limited Edition)\Wirtshaus Gaudi (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Erdentempel (Limited Edition)\Wirtshaus Gaudi.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Sagas\Heimwärts.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Sagas\Mana.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Equilibrium\Waldschrein\Himmelsrand.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Erich-Weinert-Ensemble\Hymnes et marches de la République Démocratique Allemande\Lied der unruhevollen.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Erroiak\Journey to Mordor\Like Some Snow-White Marble Eyes.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Escape the Fate\Ungrateful\One For The Money.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Estatic Fear\Somnium Obmutum\Des Nachtens Suss Gedone.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eternal Tears of Sorrow\A Virgin and a Whore\Blood of Hatred.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eternal Tears of Sorrow\Saivon lapsi\Kuura.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eternal Tears of Sorrow\Saivon lapsi\Saivo.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Eternal Tears of Sorrow\Saivon lapsi\Swan Saivo.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Fallen Joy\Inner Supremacy\Breaking the Light.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Falling In Reverse\Losing My Life\Losing My Life.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Famous Last Words\Two-Faced Charade\Victim of the Virtuoso.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Gareth Coker,Aeralie Brighton\Ori and the Blind Forest (Original Soundtrack)\Ori, Lost In the Storm (feat. Aeralie Brighton).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Gareth Coker,Aeralie Brighton\Ori and the Blind Forest (Original Soundtrack)\The Spirit Tree (feat. Aeralie Brighton).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Gareth Coker,Rachel Mellis\Ori and the Blind Forest (Original Soundtrack)\Naru, Embracing the Light (feat. Rachel Mellis).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Ghost Bath\Funeral\Burial.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Haggard\Eppur si muove\Larghetto  Epilogo adagio.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Haggard\Eppur si muove\Minuetto in fa-minore.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Haggard\Eppur si muove\The Observer.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Hans Zimmer,Lorne Balfe\Crysis 2 (Original Videogame Soundtrack)\Crysis 2 Intro.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Hans Zimmer\Interstellar (Original Motion Picture Soundtrack) [Expanded Edition]\Detach.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Hellveto\Neoheresy\Herezja.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Hundredth\Free\Break Free.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\Beginning Of The End.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\Calvert Street.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\Nightmares.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\No One Will Save Us.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\The Beaten Path.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\Thirty One & Sevens.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\I Killed the Prom Queen\Beloved (Deluxe Edition)\To The Wolves.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Illnath\Third Act in the Theatre of Madness\Scarecrow.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Illnath\Third Act in the Theatre of Madness\Snake of Eden.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Illnath\Third Act in the Theatre of Madness\Third Act.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Infant Annihilator,Alex Terrible\The Battle of Yaldabaoth\A Rape Of Sirens.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Infant Annihilator,Storm Strope\The Battle of Yaldabaoth\Ov Sacrament And Sincest.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Infant Annihilator\The Palpable Leprosy of Pollution (Instrumental)\Decapitation Fornication.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Jack Wall\Call of Duty® Black Ops Cold War (Official Game Soundtrack)\Rising Tide.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Jeff Williams,Casey Lee Williams\RWBY, Vol. 1 (Music from the Rooster Teeth Series)\Red Like Roses (Red Trailer) [feat. Casey Lee Williams].flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Jeff Williams,Casey Lee Williams\RWBY, Vol. 2 (Music from the Rooster Teeth Series)\Time to Say Goodbye.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Johnny Cash\Unearthed\Heart Of Gold.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\KOKIA\咲夜琉命～SAKIYA=RUMEI～Ar tonelico3 Hymmnos Concert side.苍\EXEC_COSMOFLIPS.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Korpiklaani\Tervaskanto\Let's Drink.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Korpiklaani\Vodka\Juodaan Viinaa.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Këkht Aräkh\Pale Swordsman\Swordsman.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Lady Gaga\ARTPOP\Applause.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Lady Gaga\ARTPOP\Aura.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Lady Gaga\Born This Way\Born This Way.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Lady Gaga\Chromatica\Chromatica III.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Lady Gaga\The Fame\Again Again.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Leaves' Eyes\Jomsborg\Jomsborg.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Lil Deuce Deuce\Witch Encounter\Witch Encounter.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Linkin Park\Faint\Faint.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Linkin Park\Numb\Numb.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Make Them Suffer\Neverbloom\Widower.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mental Cruelty\A Hill to Die Upon\Ultima Hypocrita.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\MiatriSs\Asgore\Asgore.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Bad\Dirty Diana.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Invincible\Cry.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Invincible\Whatever Happens.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Off the Wall\Quincy Jones Interview #2.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Off the Wall\Quincy Jones Interview #3.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Off the Wall\Voice-over Intro Don't Stop 'Til You Get Enough (Original Demo From 1978).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Off the Wall\Voice-over Intro Quincy Jones Interview #4Quincy Jones Interview.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Off the Wall\Voice-over Intro Quincy Jones InterviewQuincy Jones Interview #1.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\Off the Wall\Voice-over Intro Workin' Day And Night (Original Demo From 1978).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\XSCAPE\Loving You (Original Version).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Michael Jackson\XSCAPE\Loving You.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mol\I  II (Remastered)\Sundrowned (Remastered).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mol\II\Kathexis.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mol\Jord (Instrumental)\Bruma (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mol\Jord (Instrumental)\Jord (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mol\Jord (Instrumental)\Virga (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mol\Møl\Airy.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Mors Principium Est\Seven\Master of the Dead.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Chimonas\Wie Gott sein.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Dogma\Der Weg ist das Ziel.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Dogma\Die Schritte.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Dogma\Ich trinke Blut.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Dogma\Mordlust.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Vanitas\Das Puppenhaus.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Vanitas\Nur In Der Nacht.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nachtblut\Vanitas\Veritas.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Navikmusic\Newtonia\Newtonia II.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nick Phoenix, Felicia\Vanquish\Vanquish.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\Dark Passion Play (Special Deluxe Edition)\7 Days to the Wolves.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\Endless Forms Most Beautiful (Deluxe Version)\Shudder Before The Beautiful.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\Endless Forms Most Beautiful (Deluxe Version)\Élan.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\All the Works of Nature Which Adorn the World-Anthropocene (Including Hurrian Hymn to Nikkal).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\All the Works of Nature Which Adorn the World-Aurorae.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\Endlessness.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\How's the Heart.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\Pan.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\Procession.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nightwish\HUMAN. II NATURE\Tribal.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nina,LAU\Synthian (Deluxe Edition)\Automatic Call (Instrumental).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Nitzan Sagie,Leib Sandler,Or Chausha\Geographic Discovery\Dark Matter.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Norther\No Way Back\Frozen Angel.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Oonagh,Santiano\Mit den Gezeiten (Special Edition)\Vergiss mein nicht.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Our Hollow, Our Home\Hartsick\Hartsick.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Overhead, The Albatross\Lads with Sticks\Jonah.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Pathfinder\Beyond the Space, Beyond the Time\Dance of Flames.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Pathfinder\Beyond the Space, Beyond the Time\Deep into That Darkness Peering.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Pathfinder\Beyond the Space, Beyond the Time\Vita Reducta Through the Portal.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Pathfinder\Beyond the Space, Beyond the Time\What If.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Pathfinder\Fifth Element\Vita.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Poets of the Fall\Ultraviolet\My Dark Disquiet.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Radio Tapok\Ich Will\Ich Will.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Rammstein\DEUTSCHLAND\DEUTSCHLAND.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Santiano\Mit den Gezeiten\Salz auf unserer Haut.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Signs of the Swarm\Pernicious\Pernicious.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Skyforest\Aftermath\Aftermath.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Skyforest\Aftermath\Ascension.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Sojourner\Empires of Ash\Aeons of Valor.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Sojourner\Empires of Ash\Empires of Ash.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Sojourner\Premonitions\Atonement.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Sojourner\Premonitions\Fatal Frame.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Sonic Syndicate\We Rule The Night\Burn This City.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\The Amity Affliction\Everyone Loves You... Once You Leave Them\Forever.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\The CNK\L'hymne à la joie\L'Hymne à la Joie.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Therion\Les Fleurs Du Mal\Les Sucettes.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen,Audrey Callahan\Humanity - Chapter I\Humanity.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen,Audrey Karrasch\Little Star feat. Audrey Karrasch\Little Star feat. Audrey Karrasch.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen,Merethe Soltvedt\Humanity - Chapter I\Beautiful People.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Humanity-Chapter I\We Are One.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Humanity-Chapter I\Wings.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Illusions\Age of Gods.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Illusions\Gift of Life.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Illusions\Homecoming.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Illusions\Merchant Prince.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Illusions\Promise.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Illusions\Soulseeker.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Vanquish\Evergreen.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Vanquish\His Brightest Star Was You.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Vanquish\Iferni.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thomas Bergersen\Vanquish\New World Order.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Three Days Grace\Human\Fallen Angel.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Thy Art Is Murder\Human Target\Make America Hate Again.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Battlecry\Battleborne.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Dragon\Dragon.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Dragon\First Contact.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Dragon\Lonely are the Brave.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Dragon\Riders of the Apocalypse.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Beneath The Ice.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Icarus (NC).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Icarus.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Identity Crime.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Juggernaut.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Ocean Kingdom.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Queen Of Crows (NC).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Queen Of Crows.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Starfleet (NC).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Starfleet.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Stormwatch (NC).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\Stormwatch.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\The World Is Mind (NC).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\The World Is Mind NSV.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Nick Phoenix\Skyworld\The World Is Mind.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Dragon\Bravestone.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Dragon\Dragonwing.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Dragon\Letters to God.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Color the Sky.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Eria.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Eyes Closing.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Forever in my Dreams.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Fountain Of Life.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Heart.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Lux Aeterna.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Men of Honor.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Northern Pastures.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Perfect Love.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Science.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Miracles\Wind Queen.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\All the Kings Horses.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Blizzard.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Breathe.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Children From The War.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Dark Ages Remix.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Freedom Fighters Remix.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Ocean Kingdom (NC).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Requiem Of Destruction.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Skyworld.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Skyworld\Winterspell.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Sun\Always Mine.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Sun\Before Time.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Sun\Cassandra.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Sun\Cry.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell, Thomas Bergersen\Sun\Starchild.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Army of Justice.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Atlantis.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Caradhras.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Dark Harbor.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Destructo.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Dragon Rider.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Everlasting.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Friendship to Last.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\He Who Brings the Night.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Immortal Avenger.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Ironwing.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Love & Loss.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Magic of Love.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Mercy in Darkness.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Mountains From Water.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Nero.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Norwegian Pirate.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Strength of a Thousand Men.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\The Last Stand.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Titan Dune.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\Unexplained Forces.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Archangel\What's Happening to Me.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\After the Fall.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Black Blade.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Breath of Ran Gor.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Enigmatic Soul.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\False King.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Fill My Heart.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Fire Nation.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Heart of Courage.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Hypnotica.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Invincible.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Master of Shadows.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Moving Mountains.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Tristan.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Invincible\Velocitron.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Unleashed\Final Days of Rome.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Unleashed\Molto Piratissimo.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Unleashed\Run Free.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Two Steps From Hell\Unleashed\Snow Angels.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\We Came As Romans, Caleb Shomo\Black Hole\Black Hole.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\WelicoRuss\Apeiron\Bludflower.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\WelicoRuss\Apeiron\Flower of Universe.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Whether, I\Goodbye\Goodbye.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Wintersun\Wintersun\Beyond The Dark Sun.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Within Destruction\Deathwish\False Revelation.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Within Destruction\Hate Me\Hate Me.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Within Temptation\Hydra\Radioactive.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Kill the Sun\Kill the Sun.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Kill the Sun\Mermaids (Child of the Blue).flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Kill the Sun\She's Nirvana.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Kill the Sun\Wisdom.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Ravenheart\Black Flame.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Ravenheart\Fire of Universe.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Sacrificium\The Undiscovered Land.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Salomé - The Seventh Veil\Beware.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Salomé - The Seventh Veil\On My Way.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Salomé - The Seventh Veil\Only for the Stars in Your Eyes.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Salomé - The Seventh Veil\Sisters of the Light.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Salomé - The Seventh Veil\Sleeping Dogs Lie.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Salomé - The Seventh Veil\The Wind and the Ocean.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\The Wonders Still Awaiting\Astèria.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Universal Tales\No Time To Live Forever.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\Xandria\Universal Tales\Universal.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\amazarashi\スピードと摩擦\スピードと摩擦.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\倦海SilenceOcean\时间之外\倦海 Silence Ocean.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\六翼天使\平等精灵\骊歌.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\六翼天使\爱\序.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\六翼天使\爱\终.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\岩崎琢\ヨルムンガンド オリジナルサウンドトラック\Hard drive music.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\梶迫小道具店\SKEPTICISM 3\Layman's question.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\结界乐队\山海\intro-山海.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\菅野祐悟\TVアニメ「亜人」オリジナルサウンドトラック\Beginning.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\萬象COSMOS\Inductionless\Inductionless.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\萬象COSMOS\我们相信与等待的一切\我们相信与等待的一切（Purple Sea）.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\血肉果汁机\血肉讲鬼：老宅豪门\带上血肉.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\野岸刊\当星火殆尽\当星火殆尽.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\颂歌Anthem\红色颂歌\暴风.血.flac""",
+    """C:\Users\netuser\Music\App-NE\VipSongsDownload\鷺巣詩郎\Shiro SAGISU Music from “SHIN EVANGELION\thème du concerto 494.flac""",
+    """C:\Users\netuser\Music\App-NE\Xandria\Neverworld's End\Blood On My Hands.flac""",
+    """C:\Users\netuser\Music\App-NE\Xandria\Neverworld's End\The Dream Is Still Alive.flac""",
+    """C:\Users\netuser\Music\App-NE\Xandria\Theater of Dimensions\Céilí.flac""",
+    """C:\Users\netuser\Music\App-NE\Xandria\Theater of Dimensions\Death to the Holy.flac""",
+    """C:\Users\netuser\Music\App-NE\Xandria\Theater of Dimensions\Song for Sorrow and Woe.flac""",
+    """C:\Users\netuser\Music\App-NE\vindsvept\Vindsvept Complete\Nightfall (Metal Version).flac""",
+    """C:\Users\netuser\Music\App-NE\朴冉\异人\王朝-异人（朴冉 remix）.flac""",
+    """C:\Users\netuser\Music\App-NE\林俊杰\西界\杀手@续.flac""",
+    """C:\Users\netuser\Music\App-NE\赵牧阳,王力宏\The Great Wall (Original Motion Picture Soundtrack)\At the Border.flac""",
+  ).map {
+    Paths.get(it)
+  }
+
+  @Test fun test00() {
+
+    files.forEach {
+
+      println(it)
+
+      val fileChannel: FileChannel = FileChannel.open(it, StandardOpenOption.READ)!!
+      val mappedReader = MappedReader(fileChannel)
+
+      val flacReader = LibFlac.getReader()
+
+      with(flacReader) {
+
+        require(mappedReader.checkMagic()) { "Not FLAC file" }
+
+        val blocks = mappedReader.parseBlocks()
+
+        val vorbisCommentBlock = blocks.value.filterIsInstance<VorbisCommentBlock>().first()
+
+        println(vorbisCommentBlock.vendor)
+
+        vorbisCommentBlock.store.forEach { pair ->
+          println(pair.first + "=" + pair.second)
+        }
+
+        val block = blocks.value[0] as StreamInfoBlock
+        println(block)
+
+        try {
+
+          val flacStream = mappedReader.sliceContent(block.totalSamples)
+
+        } catch (e: Exception) {
+
+          val strings = e.message!!.split(" ")
+
+          val storeCRC = strings[1].toInt()
+          val actualCRC = strings[2].toInt()
+          val syncIndex = strings[3].toInt()
+          val syncEnd = strings[4].toInt()
+
+          val fileSize = it.fileSize().toInt()
+          val remainSize = fileSize - syncIndex
+
+          println("$storeCRC $actualCRC - $fileSize $remainSize | $syncIndex $syncEnd")
+
+          if (remainSize > 128) {
+            System.err.println("TOO LONG - REMAIN $remainSize , LAST 128")
+
+            val data = mappedReader.get(128, fileSize - 128)
+              .map { it -> it.toInt() and 0xff }
+              .map { it -> Integer.toHexString(it) }
+              .map { it -> it.uppercase() }
+            println(data.joinToString(" "))
+
+            return@forEach
+          }
+
+          val data = mappedReader.get(remainSize, syncIndex)
+            .map { it -> it.toInt() and 0xff }
+            .map { it -> Integer.toHexString(it) }
+            .map { it -> it.uppercase() }
+
+          if (data.size < 128) {
+            println(data.joinToString(" "))
+          } else {
+            System.err.println("TOO LONG - DATA ${data.size} , LAST 128")
+            val data = mappedReader.get(128, fileSize - 128)
+              .map { it -> it.toInt() and 0xff }
+              .map { it -> Integer.toHexString(it) }
+              .map { it -> it.uppercase() }
+            println(data.joinToString(" "))
+          }
+
+        }
+
+      }
+
+    }
+
+  }
+
+  @Test fun test01() {
+
+    files.parallelStream().forEach {
+
+      val fileChannel: FileChannel = FileChannel.open(it, StandardOpenOption.READ)!!
+
+    }
+
+  }
+
+  //= ==========================================================================
+}
